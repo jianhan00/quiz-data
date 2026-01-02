@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>線上刷題小程序</title>
 <style>
-/* 樣式保持不變 */
 :root{--bg:#f6f7fb;--card:#fff;--ink:#0f172a;--muted:#64748b;--brand:#3b82f6;--ok:#16a34a;--bad:#ef4444;--line:#e5e7eb}
 *{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,"Noto Sans TC",sans-serif;background:var(--bg);color:var(--ink)}
 .wrap{max-width:1000px;margin:24px auto;padding:0 16px}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 30px rgba(15,23,42,.06);padding:18px}
@@ -46,7 +45,6 @@ let BANK = [];
 
 async function init(){
   try {
-    // 加上時間戳記避免快取舊題目
     const r = await fetch('questions.json?t=' + new Date().getTime()); 
     if(!r.ok) throw new Error('讀取失敗');
     BANK = await r.json();
@@ -183,7 +181,6 @@ function render(root){
   refreshUI(root, q, pi);
 }
 
-// === 這裡是最主要的修改點 ===
 function refreshUI(root, q, pi){
   const st = root._state;
   const isRev = st.revealed[pi];
@@ -196,17 +193,14 @@ function refreshUI(root, q, pi){
     fb.classList.remove('hidden');
     fb.className = `feedback s-fb ${ok?'ok':'bad'}`;
     
-    // 顯示結果
     root.querySelector('.s-fbTitle').textContent = ok ? '答對了 ✅' : '答錯了 ❌';
     
-    // 智慧顯示：不顯示 A/B/C，而是顯示該選項的「文字內容」
-    // 如果選項存在，就抓文字；如果抓不到，才顯示 A/B/C 當作備案
     const ansText = correct.map(i => (q.options && q.options[i]) ? q.options[i] : ['A','B','C','D'][i]).join(', ');
-    
     root.querySelector('.s-fbAns').textContent = '正確答案：' + ansText;
-    root.querySelector('.s-fbExp').textContent = q.explanation || '';
     
-    // 標記選項顏色
+    // 這裡保留了上一版的修正：加上「解析：」
+    root.querySelector('.s-fbExp').textContent = q.explanation ? '解析：' + q.explanation : '';
+    
     root.querySelectorAll('.opt').forEach((row, i) => {
       row.classList.remove('correct','wrong');
       if(correct.includes(i)) row.classList.add('correct');
@@ -217,23 +211,24 @@ function refreshUI(root, q, pi){
   }
 }
 
+// === 這次主要的修改在 showReport ===
 function showReport(root){
   const st = root._state;
   const box = root.querySelector('.s-report');
   box.classList.remove('hidden');
   const wrongList = st.paper.filter(pi => !same(st.user[pi], BANK[pi].answer));
   
+  // 這裡將標題改成了「本次練習已完成」，並設為藍色凸顯
   box.innerHTML = `
-    <h3>成績報告</h3>
-    <div style="margin-bottom:10px">
+    <h2 style="color:#3b82f6; margin-top:0">本次練習已完成</h2>
+    <div style="margin-bottom:15px; font-size:16px;">
        <span class="chip">答對：${st.right} / ${st.paper.length}</span>
        <span class="chip">正確率：${Math.round(st.right/st.paper.length*100)}%</span>
     </div>
-    ${wrongList.length===0 ? '<p>全對！太棒了 🎉</p>' : 
+    ${wrongList.length===0 ? '<p style="font-size:18px; color:#16a34a">全對！太棒了 🎉</p>' : 
       `<details open><summary>錯題清單 (${wrongList.length})</summary>
        <ul>${wrongList.map(pi => {
          const q = BANK[pi];
-         // 錯題報告也同步改成顯示文字內容
          const ansText = normalize(q.answer).map(i => (q.options && q.options[i]) ? q.options[i] : ['A','B','C','D'][i]).join(', ');
          return `<li>
             <b>${q.question}</b><br>
@@ -242,11 +237,13 @@ function showReport(root){
          </li>`;
        }).join('')}</ul></details>`
     }
-    <button class="btn brand" onclick="mountStudent('#panel-student')">再玩一次</button>
+    <div style="margin-top:20px">
+       <button class="btn brand" onclick="mountStudent('#panel-student')">再玩一次</button>
+    </div>
   `;
   root.querySelector('.s-nav').classList.add('hidden');
   root.querySelector('.s-optBox').innerHTML = '';
-  root.querySelector('.s-q').textContent = '測驗結束';
+  root.querySelector('.s-q').textContent = ''; // 清空題目區
 }
 init();
 </script>
