@@ -198,7 +198,6 @@ function refreshUI(root, q, pi){
     const ansText = correct.map(i => (q.options && q.options[i]) ? q.options[i] : ['A','B','C','D'][i]).join(', ');
     root.querySelector('.s-fbAns').textContent = '正確答案：' + ansText;
     
-    // 這裡保留了上一版的修正：加上「解析：」
     root.querySelector('.s-fbExp').textContent = q.explanation ? '解析：' + q.explanation : '';
     
     root.querySelectorAll('.opt').forEach((row, i) => {
@@ -211,14 +210,12 @@ function refreshUI(root, q, pi){
   }
 }
 
-// === 這次主要的修改在 showReport ===
 function showReport(root){
   const st = root._state;
   const box = root.querySelector('.s-report');
   box.classList.remove('hidden');
   const wrongList = st.paper.filter(pi => !same(st.user[pi], BANK[pi].answer));
   
-  // 這裡將標題改成了「本次練習已完成」，並設為藍色凸顯
   box.innerHTML = `
     <h2 style="color:#3b82f6; margin-top:0">本次練習已完成</h2>
     <div style="margin-bottom:15px; font-size:16px;">
@@ -238,12 +235,12 @@ function showReport(root){
        }).join('')}</ul></details>`
     }
     <div style="margin-top:20px">
-       <button class="btn brand" onclick="mountStudent('#panel-student')">再玩一次</button>
+       <button class="btn brand" onclick="mountStudent('#panel-student')">再練習一次</button>
     </div>
   `;
   root.querySelector('.s-nav').classList.add('hidden');
   root.querySelector('.s-optBox').innerHTML = '';
-  root.querySelector('.s-q').textContent = ''; // 清空題目區
+  root.querySelector('.s-q').textContent = ''; 
 }
 init();
 </script>
