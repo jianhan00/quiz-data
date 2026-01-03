@@ -3,6 +3,12 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<!-- ✅ Safari / iOS 強快取修正：只新增，不改動其他內容 -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+
 <title>線上刷題小程序</title>
 <style>
 :root{--bg:#f6f7fb;--card:#fff;--ink:#0f172a;--muted:#64748b;--brand:#3b82f6;--ok:#16a34a;--bad:#ef4444;--line:#e5e7eb}
@@ -45,7 +51,8 @@ let BANK = [];
 
 async function init(){
   try {
-    const r = await fetch('questions.json?t=' + new Date().getTime()); 
+    // ✅ Safari / iOS 強快取修正：只在 fetch 加上 cache: 'no-store'，其餘不動
+    const r = await fetch('questions.json?t=' + new Date().getTime(), { cache: 'no-store' });
     if(!r.ok) throw new Error('讀取失敗');
     BANK = await r.json();
     mountStudent('#panel-student');
